@@ -5,16 +5,15 @@ from __future__ import annotations
 import os
 from collections.abc import Callable
 
+import httpx
 import pytest
 
 from langchain_perplexity import PerplexityDecisions
-from langchain_perplexity.decisions import (
-    DecisionRequest,
-    DecisionResponse,
-    PerplexityDecisionsInvalidRequestError,
-)
+from langchain_perplexity.decisions import DecisionRequest, DecisionResponse
 
 KEY = "OPENROUTER_API_KEY"
+
+ROUTE = "openrouter"
 
 pytestmark = [
     pytest.mark.live_required(KEY),
@@ -31,41 +30,45 @@ def test_quickstart(
     decisions: PerplexityDecisions,
     quickstart_request: DecisionRequest,
     check_quickstart_structure: Callable[[DecisionResponse], None],
+    recorded_response: Callable[[str, str], dict[str, object]],
+    check_same_top_level_shape: Callable[[DecisionResponse, dict[str, object]], None],
     record_property: Callable[[str, object], None],
 ) -> None:
     response = decisions.invoke(quickstart_request)
     check_quickstart_structure(response)
+    check_same_top_level_shape(response, recorded_response("row12_baseline", ROUTE))
     record_property("request_id", response.request_id)
     record_property("provider", response.provider)
     record_property("usage", response.usage.model_dump() if response.usage else None)
 
 
-def test_criteria_only_noul_is_recorded(
-    decisions: PerplexityDecisions,
+def test_criteria_only_noul_is_rejected_locally(
     criteria_only_request: DecisionRequest,
-    record_property: Callable[[str, object], None],
 ) -> None:
-    try:
-        response = decisions.invoke(criteria_only_request)
-    except PerplexityDecisionsInvalidRequestError as error:
-        record_property("criteria_only_status", error.status)
-        return
-    record_property("criteria_only_status", 200)
-    assert 0.0 <= response.nouls["defect"].noul <= 1.0
+    seen: list[httpx.Request] = []
+
+    def respond(request: httpx.Request) -> httpx.Response:
+        seen.append(request)
+        return httpx.Response(200, json={"answers": {}})
+
+    decisions = PerplexityDecisions(
+        route="openrouter",
+        client=httpx.Client(transport=httpx.MockTransport(respond)),
+    )
+    with pytest.raises(ValueError, match="openrouter route requires `instructions`"):
+        decisions.invoke(criteria_only_request)
+    assert seen == []
 
 
-def test_single_level_score_is_recorded(
+def test_single_level_score(
     decisions: PerplexityDecisions,
     single_level_request: DecisionRequest,
-    record_property: Callable[[str, object], None],
 ) -> None:
-    try:
-        response = decisions.invoke(single_level_request)
-    except PerplexityDecisionsInvalidRequestError as error:
-        record_property("single_level_status", error.status)
-        return
-    record_property("single_level_status", 200)
-    assert response.scores["severity"].score == 0.0
+    response = decisions.invoke(single_level_request)
+    severity = response.scores["severity"]
+    assert severity.score == 0.0
+    if severity.probabilities is not None:
+        assert severity.probabilities == {0: 1.0}
 
 
 def test_image_in_human_message(

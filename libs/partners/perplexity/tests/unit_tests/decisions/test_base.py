@@ -82,7 +82,7 @@ def test_openrouter_defaults(recorder: Recorder) -> None:
     assert request.headers["HTTP-Referer"] == "https://docs.langchain.com"
     assert request.headers["X-Title"] == "LangChain"
     assert _payload(request) == {
-        "model": "perplexity/pplx-decider-v1.1-27b",
+        "model": "perplexity/pplx-decider-v1.2",
         "state": "hello",
         "questions": {"q": {"type": "noul", "instructions": "Is it a greeting?"}},
     }
@@ -102,7 +102,7 @@ def test_native_defaults(recorder: Recorder) -> None:
     assert request.headers["User-Agent"] == f"langchain-perplexity/{__version__}"
     assert "HTTP-Referer" not in request.headers
     assert "X-Title" not in request.headers
-    assert _payload(request)["model"] == "pplx-decider-v1.1-27b"
+    assert _payload(request)["model"] == "pplx-decider-v1.2"
     assert decisions.ls_provider == "perplexity"
     assert decisions.lc_secrets == {"api_key": "PPLX_API_KEY"}
 

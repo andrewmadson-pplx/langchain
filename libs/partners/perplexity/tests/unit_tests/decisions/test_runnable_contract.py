@@ -139,7 +139,7 @@ def test_callbacks_receive_tracing_metadata() -> None:
     assert start["input"] == _request("yes")
     assert start["metadata"] == {
         "ls_provider": "perplexity",
-        "ls_model_name": "pplx-decider-v1.1-27b",
+        "ls_model_name": "pplx-decider-v1.2",
         "ls_model_type": "chat",
     }
     [end] = recorder.ends

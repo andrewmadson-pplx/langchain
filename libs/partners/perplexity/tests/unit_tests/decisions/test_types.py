@@ -21,7 +21,7 @@ from langchain_perplexity.decisions._client import build_payload
 from langchain_perplexity.decisions._routes import ROUTES
 
 QUICKSTART_PAYLOAD = (
-    '{"model":"pplx-decider-v1.1-27b",'
+    '{"model":"pplx-decider-v1.2",'
     '"state":{"title":"Battery died after two weeks",'
     '"review":"The headphones sound great, but the battery stopped charging '
     'after two weeks."},'
@@ -81,9 +81,9 @@ def test_question_count_and_names() -> None:
         model="m",
         route=route,
     )
-    with pytest.raises(ValueError, match="1 to 128"):
+    with pytest.raises(ValueError, match="at least 1 question"):
         build_payload({"state": "s", "questions": {}}, model="m", route=route)
-    with pytest.raises(ValueError, match="1 to 128"):
+    with pytest.raises(ValueError, match="documented limit is 128"):
         build_payload(
             {"state": "s", "questions": {str(i): question for i in range(129)}},
             model="m",
@@ -95,16 +95,22 @@ def test_question_count_and_names() -> None:
         )
 
 
-def test_openrouter_instructions_flag(monkeypatch: pytest.MonkeyPatch) -> None:
+def test_criteria_only_noul_by_route(monkeypatch: pytest.MonkeyPatch) -> None:
     request: DecisionRequest = {
         "state": "s",
-        "questions": {"n": Noul(criteria=NoulCriteria(true="yes"))},
+        "questions": {"defect": Noul(criteria=NoulCriteria(true="yes"))},
     }
-    build_payload(request, model="m", route=ROUTES["openrouter"])
-    monkeypatch.setattr(_routes, "OPENROUTER_REQUIRES_INSTRUCTIONS", True)
-    build_payload(request, model="m", route=ROUTES["native"])
-    with pytest.raises(ValueError, match="OpenRouter requires instructions"):
+    payload = build_payload(request, model="m", route=ROUTES["native"])
+    assert payload["questions"] == {
+        "defect": {"type": "noul", "criteria": {"true": "yes"}}
+    }
+    with pytest.raises(ValueError, match="openrouter route requires `instructions`"):
         build_payload(request, model="m", route=ROUTES["openrouter"])
+    with pytest.raises(ValueError, match="'defect'"):
+        build_payload(request, model="m", route=ROUTES["openrouter"])
+
+    monkeypatch.setattr(_routes, "OPENROUTER_REQUIRES_INSTRUCTIONS", False)
+    build_payload(request, model="m", route=ROUTES["openrouter"])
 
 
 def test_quickstart_payload_bytes() -> None:
@@ -133,7 +139,7 @@ def test_quickstart_payload_bytes() -> None:
                 ),
             },
         },
-        model="pplx-decider-v1.1-27b",
+        model="pplx-decider-v1.2",
         route=ROUTES["native"],
     )
     assert json.dumps(payload, separators=(",", ":")) == QUICKSTART_PAYLOAD
@@ -195,3 +201,50 @@ def test_endpoint_validation() -> None:
         DecisionsEndpoint(base_url="https://gw.example.com", path="decisions")
     with pytest.raises(ValidationError, match="http"):
         DecisionsEndpoint(base_url="gw.example.com", path="/decisions")
+
+
+def test_live_response_shapes() -> None:
+    """Top-level shapes recorded from both routes in the 2026-10-19 spike."""
+    answers = {
+        "severity": {
+            "type": "score",
+            "score": 1.8994243530774915,
+            "legend": {"0": "none", "1": "minor", "2": "moderate", "3": "severe"},
+            "probabilities": {"0": 0.0079, "1": 0.1702, "2": 0.7363, "3": 0.0855},
+            "confidence": 0.7283922171743744,
+        }
+    }
+    openrouter = DecisionResponse.model_validate(
+        {
+            "model": "perplexity/pplx-decider-v1.2-20261016",
+            "answers": answers,
+            "usage": {"input_tokens": 224, "output_tokens": 2, "cost": 4.48e-06},
+            "id": "gen-dec-1792441568-scX8l2WAxJVvoYmV3fQY",
+            "provider": "Perplexity",
+        }
+    )
+    assert openrouter.model == "perplexity/pplx-decider-v1.2-20261016"
+    assert openrouter.provider == "Perplexity"
+    assert openrouter.usage is not None
+    assert openrouter.usage.cost == 4.48e-06
+    assert openrouter.raw == {}
+
+    native = DecisionResponse.model_validate(
+        {
+            "model": "pplx-decider-v1.2",
+            "answers": answers,
+            "usage": {"input_tokens": 105, "output_tokens": 1},
+        }
+    )
+    assert native.id is None
+    assert native.provider is None
+    assert native.usage is not None
+    assert native.usage.cost is None
+    assert native.usage.input_tokens == 105
+    assert isinstance(native.scores["severity"].score, float)
+    assert native.scores["severity"].legend == {
+        0: "none",
+        1: "minor",
+        2: "moderate",
+        3: "severe",
+    }

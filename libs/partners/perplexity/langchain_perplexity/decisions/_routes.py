@@ -8,12 +8,13 @@ from typing import Literal, TypeAlias
 RouteName: TypeAlias = Literal["openrouter", "native"]
 """Name of a supported route."""
 
-OPENROUTER_REQUIRES_INSTRUCTIONS = False
+OPENROUTER_REQUIRES_INSTRUCTIONS = True
 """Whether the openrouter route rejects `Noul` questions that carry only criteria.
 
-Set to `True` if the live contract spike shows that OpenRouter returns an error for
-criteria-only `noul` questions. The check is applied at request-build time and only
-on the openrouter route; instructions are never synthesized from criteria.
+The live contract spike on 2026-10-19 showed OpenRouter returns 400 for a `noul`
+without `instructions` while the native route accepts it. The check is applied at
+request-build time and only on the openrouter route; instructions are never
+synthesized from criteria. Set to `False` if OpenRouter starts accepting them.
 """
 
 DEFAULT_APP_URL = "https://docs.langchain.com"
@@ -43,6 +44,7 @@ class RouteSpec:
         extra_allowlist: Top-level request keys accepted through `extra`.
         request_id_header: Response header carrying the request ID, or `None`.
         request_id_in_body: Whether the response body `id` field is the request ID.
+            When `True` the body is checked first and the header is the fallback.
         attribution_headers: Whether `HTTP-Referer` and `X-Title` are sent.
     """
 
@@ -88,10 +90,10 @@ ROUTES: dict[RouteName, RouteSpec] = {
         base_url="https://openrouter.ai/api",
         path="/alpha/decisions",
         api_key_env_vars=("OPENROUTER_API_KEY",),
-        default_model="perplexity/pplx-decider-v1.1-27b",
+        default_model="perplexity/pplx-decider-v1.2",
         ls_provider="openrouter",
         extra_allowlist=frozenset({"provider", "session_id", "trace", "user"}),
-        request_id_header=None,
+        request_id_header="x-request-id",
         request_id_in_body=True,
         attribution_headers=True,
     ),
@@ -100,7 +102,7 @@ ROUTES: dict[RouteName, RouteSpec] = {
         base_url="https://api.perplexity.ai",
         path="/v1/decisions",
         api_key_env_vars=("PPLX_API_KEY", "PERPLEXITY_API_KEY"),
-        default_model="pplx-decider-v1.1-27b",
+        default_model="pplx-decider-v1.2",
         ls_provider="perplexity",
         extra_allowlist=frozenset(),
         request_id_header="x-request-id",
