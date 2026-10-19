@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+import json
 import threading
 from typing import Any
 
@@ -51,7 +52,7 @@ class _Tracker:
             self.active += 1
             self.peak = max(self.peak, self.active)
         try:
-            return _ok(request.content.decode().split('"state":"')[1].split('"')[0])
+            return _ok(json.loads(request.content)["state"])
         finally:
             with self._lock:
                 self.active -= 1
@@ -62,7 +63,7 @@ class _Tracker:
         self.peak = max(self.peak, self.active)
         await asyncio.sleep(self.delay)
         self.active -= 1
-        return _ok(request.content.decode().split('"state":"')[1].split('"')[0])
+        return _ok(json.loads(request.content)["state"])
 
 
 class _Recorder(BaseCallbackHandler):
@@ -148,7 +149,7 @@ def test_callbacks_receive_tracing_metadata() -> None:
 
 def test_batch_error_propagation() -> None:
     def respond(request: httpx.Request) -> httpx.Response:
-        if b'"state":"bad"' in request.content:
+        if json.loads(request.content)["state"] == "bad":
             return httpx.Response(400, json={"error": {"message": "bad state"}})
         return _ok("yes")
 
