@@ -43,7 +43,30 @@ from langchain_perplexity.decisions._routes import ROUTES
 
 NATIVE = ROUTES["native"]
 OPENROUTER = ROUTES["openrouter"]
-PRIVATE_BODY = "Noul question must have criteria or instructions"
+PRIVATE_BODY = (
+    "Invalid model 'no-such-model-xyz'. Permitted models can be found in the "
+    "documentation at https://docs.perplexity.ai/docs/getting-started/models."
+)
+OPENROUTER_NESTED_400 = {
+    "error": {
+        "message": (
+            'HTTP 400: {"error":{"message":"Each decision needs between 1 and 255 '
+            'options","type":"invalid_request","code":"400"}}'
+        ),
+        "code": 400,
+    }
+}
+OPENROUTER_ZOD_400 = {
+    "error": {
+        "message": (
+            '[\n  {\n    "expected": "record",\n    "code": "invalid_type",\n'
+            '    "path": [\n      "questions"\n    ],\n    "message": "Invalid '
+            'input: expected record, received undefined"\n  }\n]'
+        ),
+        "code": 400,
+    },
+    "user_id": "user_redacted",
+}
 AUTH_VALUE = "Bearer sk-secret-value"
 HTML_504 = "<html><head><title>504 Gateway Time-out</title></head></html>"
 
@@ -72,9 +95,10 @@ def _response(
                 400,
                 json={
                     "error": {
+                        "code": None,
                         "message": PRIVATE_BODY,
-                        "type": "invalid_request",
-                        "code": "400",
+                        "param": None,
+                        "type": "invalid_request_error",
                     }
                 },
             ),
@@ -100,9 +124,14 @@ def _response(
             ModelPermissionDeniedError,
             False,
         ),
-        (_response(404), PerplexityDecisionsNotFoundError, ModelNotFoundError, False),
         (
-            _response(405, headers={"Allow": "POST"}),
+            _response(404, headers={"Content-Type": "text/plain; charset=utf-8"}),
+            PerplexityDecisionsNotFoundError,
+            ModelNotFoundError,
+            False,
+        ),
+        (
+            _response(405, headers={"Allow": "POST", "Content-Length": "0"}),
             PerplexityDecisionsNotFoundError,
             ModelNotFoundError,
             False,
@@ -189,6 +218,104 @@ def test_empty_and_html_bodies_are_kept_as_text_or_none() -> None:
     assert "Redirect" not in str(gateway.value)
 
 
+@pytest.mark.parametrize(
+    ("route", "response", "expected_body", "expected_request_id"),
+    [
+        (
+            OPENROUTER,
+            _response(
+                400,
+                json=OPENROUTER_NESTED_400,
+                url="https://openrouter.ai/api/alpha/decisions",
+            ),
+            OPENROUTER_NESTED_400,
+            None,
+        ),
+        (
+            OPENROUTER,
+            _response(
+                400,
+                json=OPENROUTER_ZOD_400,
+                url="https://openrouter.ai/api/alpha/decisions",
+            ),
+            OPENROUTER_ZOD_400,
+            None,
+        ),
+        (
+            OPENROUTER,
+            _response(
+                404,
+                body=b"404 Not Found",
+                headers={"Content-Type": "text/plain; charset=UTF-8"},
+                url="https://openrouter.ai/api/alpha/decisionsz",
+            ),
+            "404 Not Found",
+            None,
+        ),
+        (
+            NATIVE,
+            _response(
+                400,
+                json={
+                    "error": {
+                        "message": "Each decision needs between 1 and 255 options",
+                        "type": "invalid_request",
+                        "code": "400",
+                    }
+                },
+                headers={"x-request-id": "a8c2b9b4-5403-44f7-b9b8-cded7a1b5366"},
+            ),
+            {
+                "error": {
+                    "message": "Each decision needs between 1 and 255 options",
+                    "type": "invalid_request",
+                    "code": "400",
+                }
+            },
+            "a8c2b9b4-5403-44f7-b9b8-cded7a1b5366",
+        ),
+        (
+            NATIVE,
+            _response(
+                404,
+                headers={"Content-Type": "text/plain; charset=utf-8"},
+                url="https://api.perplexity.ai/v1/decisionsz",
+            ),
+            None,
+            None,
+        ),
+        (
+            NATIVE,
+            _response(
+                405,
+                headers={
+                    "Allow": "POST",
+                    "Content-Length": "0",
+                    "x-request-id": "37f71ebb-2042-4e87-b8c4-85a2fe8d604f",
+                },
+            ),
+            None,
+            "37f71ebb-2042-4e87-b8c4-85a2fe8d604f",
+        ),
+    ],
+)
+def test_live_observed_error_bodies(
+    route: Any,
+    response: httpx.Response,
+    expected_body: Any,
+    expected_request_id: str | None,
+) -> None:
+    """Bodies recorded from both routes in the 2026-10-19 contract spike."""
+    with pytest.raises(PerplexityDecisionsAPIError) as exc_info:
+        parse_response(response, route)
+    error = exc_info.value
+    assert error.body == expected_body
+    assert error.request_id == expected_request_id
+    assert "Each decision" not in str(error)
+    assert "invalid_type" not in str(error)
+    assert "user_redacted" not in str(error)
+
+
 def test_redirect_error_message_and_json_body_parsing() -> None:
     with pytest.raises(PerplexityDecisionsServerError, match="Redirects are disabled"):
         parse_response(_response(302, headers={"Location": "/elsewhere"}), NATIVE)
@@ -266,6 +393,15 @@ def test_request_id_source_by_route() -> None:
     body = {"id": "gen-123", "answers": {"n": {"type": "noul", "noul": 0.1}}}
     headers = {"x-request-id": "hdr-456"}
     assert parse_response(_response(200, json=body), OPENROUTER).request_id == "gen-123"
+    openrouter = parse_response(_response(200, json=body, headers=headers), OPENROUTER)
+    assert openrouter.request_id == "gen-123"
+    no_id = {"answers": body["answers"]}
+    assert (
+        parse_response(
+            _response(200, json=no_id, headers=headers), OPENROUTER
+        ).request_id
+        == "hdr-456"
+    )
     native = parse_response(_response(200, json=body, headers=headers), NATIVE)
     assert native.request_id == "hdr-456"
     assert native.id == "gen-123"

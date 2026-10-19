@@ -10,7 +10,11 @@ from pydantic import BaseModel, ConfigDict, Field, JsonValue, model_validator
 from typing_extensions import Self, TypedDict
 
 MAX_QUESTIONS = 128
-"""Largest number of questions accepted in one request."""
+"""Documented limit on questions per request.
+
+Both routes accepted 129 questions in the live spike on 2026-10-19; the limit here
+follows the documentation rather than observed behavior.
+"""
 
 MAX_CHOICE_OPTIONS = 255
 """Largest number of options accepted by a `Choice` question."""
@@ -61,9 +65,10 @@ class NoulCriteria(BaseModel):
 class Noul(BaseModel):
     """A yes or no question answered with the probability of yes.
 
-    Give `instructions`, `criteria`, or both. The answer is a probability from `0`
-    to `1`; values near `0.5` mean the model is unsure. The threshold you compare
-    against belongs to your application.
+    Give `instructions`, `criteria`, or both. The openrouter route requires
+    `instructions`; only the native route accepts criteria alone. The answer is a
+    probability from `0` to `1`; values near `0.5` mean the model is unsure. The
+    threshold you compare against belongs to your application.
 
     Example:
         ```python
@@ -222,8 +227,9 @@ class ChoiceAnswer(BaseModel):
 class ScoreAnswer(BaseModel):
     """Answer to a `Score` question.
 
-    `legend` and `probabilities` arrive keyed by string level numbers on the wire
-    and are coerced to integer keys here.
+    `score` is a probability-weighted average of the level indices and is usually
+    fractional, for example `1.8994`. `legend` and `probabilities` arrive keyed by
+    string level numbers on the wire and are coerced to integer keys here.
     """
 
     model_config = ConfigDict(extra="allow")

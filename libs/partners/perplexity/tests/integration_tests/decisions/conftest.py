@@ -10,11 +10,13 @@ conftest files at or above the directory it was pointed at.
 from __future__ import annotations
 
 import base64
+import json
 import math
 import os
 import struct
 import zlib
 from collections.abc import Callable
+from pathlib import Path
 
 import pytest
 from langchain_core.messages import HumanMessage
@@ -30,6 +32,7 @@ from langchain_perplexity.decisions import (
 )
 
 LIVE_MARKER = "live_required"
+FIXTURES = Path(__file__).parent / "fixtures"
 
 
 def _require_live(config: pytest.Config) -> bool:
@@ -189,3 +192,40 @@ def assert_quickstart_structure(response: DecisionResponse) -> None:
 def check_quickstart_structure() -> Callable[[DecisionResponse], None]:
     """Structural checks for the quickstart response, shared by both routes."""
     return assert_quickstart_structure
+
+
+@pytest.fixture
+def recorded_response() -> Callable[[str, str], dict[str, object]]:
+    """Load the sanitized response recorded for a spike row on a route."""
+
+    def load(row: str, route: str) -> dict[str, object]:
+        data = json.loads((FIXTURES / f"{row}.{route}.json").read_text())
+        response = data["response"]
+        assert isinstance(response, dict)
+        return response
+
+    return load
+
+
+def _assert_same_top_level_shape(
+    response: DecisionResponse, recorded: dict[str, object]
+) -> None:
+    body = recorded["json"]
+    assert isinstance(body, dict)
+    live = {
+        key: value
+        for key, value in response.model_dump(exclude_none=True).items()
+        if key not in {"request_id", "raw"}
+    } | response.raw
+    assert set(live) == set(body)
+    if "usage" in body and isinstance(body["usage"], dict):
+        assert response.usage is not None
+        assert set(response.usage.model_dump(exclude_none=True)) == set(body["usage"])
+
+
+@pytest.fixture
+def check_same_top_level_shape() -> Callable[
+    [DecisionResponse, dict[str, object]], None
+]:
+    """Check a live response has the same top-level and usage keys as recorded."""
+    return _assert_same_top_level_shape

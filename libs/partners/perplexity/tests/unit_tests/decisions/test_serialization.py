@@ -47,7 +47,7 @@ def test_dumpd_excludes_key_value_and_clients() -> None:
     decisions = PerplexityDecisions(
         route="native",
         api_key="very-secret",
-        model="pplx-decider-v1.1-27b",
+        model="pplx-decider-v1.2",
         client=httpx.Client(),
         async_client=httpx.AsyncClient(),
     )

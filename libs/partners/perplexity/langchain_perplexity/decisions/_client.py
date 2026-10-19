@@ -335,7 +335,10 @@ def _validate_questions(
         message = "`questions` must be a mapping of question names to questions."
         raise TypeError(message)
     if not 1 <= len(questions) <= MAX_QUESTIONS:
-        message = f"A request needs 1 to {MAX_QUESTIONS} questions."
+        message = (
+            f"A request needs at least 1 question; the documented limit is "
+            f"{MAX_QUESTIONS} questions."
+        )
         raise ValueError(message)
     payload: dict[str, JsonValue] = {}
     for name, question in questions.items():
@@ -349,7 +352,10 @@ def _validate_questions(
             and isinstance(parsed, Noul)
             and parsed.instructions is None
         ):
-            message = "OpenRouter requires instructions on noul questions"
+            message = (
+                f"The openrouter route requires `instructions` on noul question "
+                f"{name!r}; criteria alone are accepted only on the native route."
+            )
             raise ValueError(message)
         payload[name] = parsed.model_dump(mode="json", exclude_none=True)
     return payload
@@ -436,14 +442,14 @@ def _body(response: httpx.Response) -> Any:
 
 
 def _request_id(response: httpx.Response, body: Any, route: RouteSpec) -> str | None:
-    if route.request_id_header is not None:
-        header = response.headers.get(route.request_id_header)
-        if header:
-            return header
     if route.request_id_in_body and isinstance(body, dict):
         value = body.get("id")
         if isinstance(value, str) and value:
             return value
+    if route.request_id_header is not None:
+        header = response.headers.get(route.request_id_header)
+        if header:
+            return header
     return None
 
 

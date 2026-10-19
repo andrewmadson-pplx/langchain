@@ -61,9 +61,11 @@ class PerplexityDecisions(RunnableSerializable[DecisionRequest, DecisionResponse
     Two routes share the same wire format and are selected explicitly with `route`:
 
     - `openrouter` (default): `https://openrouter.ai/api/alpha/decisions` with
-      `OPENROUTER_API_KEY` and model `perplexity/pplx-decider-v1.1-27b`.
+      `OPENROUTER_API_KEY` and model `perplexity/pplx-decider-v1.2`. This route
+      requires `instructions` on every `Noul`.
     - `native`: `https://api.perplexity.ai/v1/decisions` with `PPLX_API_KEY` or
-      `PERPLEXITY_API_KEY` and model `pplx-decider-v1.1-27b`.
+      `PERPLEXITY_API_KEY` and model `pplx-decider-v1.2`. This route also accepts a
+      `Noul` with only `criteria`.
 
     There is no fallback between routes, no key sniffing, and no retry inside the
     class. One `invoke` makes exactly one HTTP request; `batch` makes one request
@@ -119,7 +121,15 @@ class PerplexityDecisions(RunnableSerializable[DecisionRequest, DecisionResponse
     """Which transport to use. The default is `openrouter`."""
 
     model: str | None = None
-    """Model name. `None` means the route default."""
+    """Model name. `None` means the route default.
+
+    Defaults are `perplexity/pplx-decider-v1.2` on the openrouter route and
+    `pplx-decider-v1.2` on the native route. Each route also serves a flash variant
+    (`perplexity/pplx-decider-flash-v1.2`, `pplx-decider-flash-v1.2`) and moving
+    aliases (`~perplexity/pplx-decider-latest`, `pplx-decider-latest`, and their
+    flash forms). Pin a versioned ID for reproducible behavior. OpenRouter echoes
+    the model back as a dated snapshot such as `perplexity/pplx-decider-v1.2-20261016`.
+    """
 
     api_key: SecretStr | None = Field(default=None, repr=False)
     """API key. `None` means the route's environment variables are read."""

@@ -1,0 +1,48 @@
+{
+  "label": "row7_missing_questions",
+  "route": "native",
+  "request": {
+    "method": "POST",
+    "url": "https://api.perplexity.ai/v1/decisions",
+    "headers": {
+      "Content-Type": "application/json",
+      "User-Agent": "langchain-perplexity-spike/0"
+    },
+    "body": {
+      "model": "pplx-decider-v1.2",
+      "state": "Customer review: The blender arrived with a cracked lid and the motor makes a grinding noise on the lowest setting. Support replaced it within two days, which I appreciated."
+    }
+  },
+  "response": {
+    "status": 400,
+    "elapsed_ms": 354,
+    "content_type": "application/json",
+    "headers": {
+      "date": "Mon, 19 Oct 2026 20:27:15 GMT",
+      "content-type": "application/json",
+      "server": "cloudflare",
+      "x-ratelimit-limit": "10",
+      "x-ratelimit-remaining": "8",
+      "x-ratelimit-reset": "1792441636",
+      "x-ratelimit-used": "2",
+      "x-request-id": "3df87fe3-2a37-4fdb-87fe-16269b7fc3db",
+      "access-control-allow-origin": "*",
+      "cf-cache-status": "DYNAMIC",
+      "strict-transport-security": "max-age=31536000; includeSubDomains; preload",
+      "cf-ray": "a4d285bc8ae5c9b5-IAD",
+      "alt-svc": "h3=\":443\"; ma=86400",
+      "content-length": "175",
+      "connection": "keep-alive"
+    },
+    "json": {
+      "error": {
+        "code": null,
+        "message": "The request body is not valid JSON for the Decisions API, or has an unknown or mistyped field.",
+        "param": null,
+        "type": "invalid_request_error"
+      }
+    },
+    "text": null,
+    "body_bytes": 175
+  }
+}
