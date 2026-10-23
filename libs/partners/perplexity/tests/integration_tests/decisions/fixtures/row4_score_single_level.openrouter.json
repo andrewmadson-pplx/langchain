@@ -1,0 +1,72 @@
+{
+  "label": "row4_score_single_level",
+  "route": "openrouter",
+  "request": {
+    "method": "POST",
+    "url": "https://openrouter.ai/api/alpha/decisions",
+    "headers": {
+      "Content-Type": "application/json",
+      "User-Agent": "langchain-perplexity-spike/0",
+      "HTTP-Referer": "https://docs.langchain.com",
+      "X-Title": "LangChain"
+    },
+    "body": {
+      "model": "perplexity/pplx-decider-v1.2",
+      "state": "Customer review: The blender arrived with a cracked lid and the motor makes a grinding noise on the lowest setting. Support replaced it within two days, which I appreciated.",
+      "questions": {
+        "severity": {
+          "type": "score",
+          "instructions": "How severe?",
+          "criteria": [
+            "only level"
+          ]
+        }
+      }
+    }
+  },
+  "response": {
+    "status": 200,
+    "elapsed_ms": 515,
+    "content_type": "application/json",
+    "headers": {
+      "date": "Mon, 19 Oct 2026 20:26:07 GMT",
+      "content-type": "application/json",
+      "access-control-allow-origin": "*",
+      "access-control-expose-headers": "X-Generation-Id,X-Provider-Name,request-id,cf-ray",
+      "x-generation-id": "gen-dec-1792441567-a8IrR85sH8ItE9xRwj8K",
+      "x-provider-name": "Perplexity",
+      "permissions-policy": "payment=(self \"https://checkout.stripe.com\" \"https://connect-js.stripe.com\" \"https://js.stripe.com\" \"https://*.js.stripe.com\" \"https://hooks.stripe.com\")",
+      "referrer-policy": "no-referrer, strict-origin-when-cross-origin",
+      "x-content-type-options": "nosniff",
+      "cf-ray": "a4d2841639e21585-IAD",
+      "server": "cloudflare",
+      "transfer-encoding": "chunked",
+      "connection": "keep-alive"
+    },
+    "json": {
+      "model": "perplexity/pplx-decider-v1.2-20261016",
+      "answers": {
+        "severity": {
+          "type": "score",
+          "score": 0,
+          "legend": {
+            "0": "only level"
+          },
+          "probabilities": {
+            "0": 1
+          },
+          "confidence": 1
+        }
+      },
+      "usage": {
+        "input_tokens": 105,
+        "output_tokens": 1,
+        "cost": 2.1e-06
+      },
+      "id": "gen-dec-1792441567-a8IrR85sH8ItE9xRwj8K",
+      "provider": "Perplexity"
+    },
+    "text": null,
+    "body_bytes": 301
+  }
+}

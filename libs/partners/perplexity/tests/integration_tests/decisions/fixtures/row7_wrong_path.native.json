@@ -1,0 +1,60 @@
+{
+  "label": "row7_wrong_path",
+  "route": "native",
+  "request": {
+    "method": "POST",
+    "url": "https://api.perplexity.ai/v1/decisionsz",
+    "headers": {
+      "Content-Type": "application/json",
+      "User-Agent": "langchain-perplexity-spike/0"
+    },
+    "body": {
+      "model": "pplx-decider-v1.2",
+      "state": "Customer review: The blender arrived with a cracked lid and the motor makes a grinding noise on the lowest setting. Support replaced it within two days, which I appreciated.",
+      "questions": {
+        "defect": {
+          "type": "noul",
+          "instructions": "Does the review describe a product defect?"
+        },
+        "sentiment": {
+          "type": "choice",
+          "instructions": "What is the overall sentiment of the review?",
+          "criteria": {
+            "negative": "Mostly dissatisfied",
+            "mixed": "Praise and complaints in one review",
+            "positive": "Mostly satisfied"
+          }
+        },
+        "severity": {
+          "type": "score",
+          "instructions": "How severe is the reported problem?",
+          "criteria": [
+            "none",
+            "minor",
+            "moderate",
+            "severe"
+          ]
+        }
+      }
+    }
+  },
+  "response": {
+    "status": 404,
+    "elapsed_ms": 228,
+    "content_type": "text/plain; charset=utf-8",
+    "headers": {
+      "date": "Mon, 19 Oct 2026 20:27:15 GMT",
+      "content-type": "text/plain; charset=utf-8",
+      "server": "cloudflare",
+      "cf-cache-status": "DYNAMIC",
+      "strict-transport-security": "max-age=31536000; includeSubDomains; preload",
+      "cf-ray": "a4d285c02e501eec-IAD",
+      "alt-svc": "h3=\":443\"; ma=86400",
+      "content-length": "0",
+      "connection": "keep-alive"
+    },
+    "json": null,
+    "text": "",
+    "body_bytes": 0
+  }
+}

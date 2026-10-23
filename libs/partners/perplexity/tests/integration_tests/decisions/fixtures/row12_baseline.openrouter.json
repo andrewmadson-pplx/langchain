@@ -1,0 +1,108 @@
+{
+  "label": "row12_baseline",
+  "route": "openrouter",
+  "request": {
+    "method": "POST",
+    "url": "https://openrouter.ai/api/alpha/decisions",
+    "headers": {
+      "Content-Type": "application/json",
+      "User-Agent": "langchain-perplexity-spike/0",
+      "HTTP-Referer": "https://docs.langchain.com",
+      "X-Title": "LangChain"
+    },
+    "body": {
+      "model": "perplexity/pplx-decider-v1.2",
+      "state": "Customer review: The blender arrived with a cracked lid and the motor makes a grinding noise on the lowest setting. Support replaced it within two days, which I appreciated.",
+      "questions": {
+        "defect": {
+          "type": "noul",
+          "instructions": "Does the review describe a product defect?"
+        },
+        "sentiment": {
+          "type": "choice",
+          "instructions": "What is the overall sentiment of the review?",
+          "criteria": {
+            "negative": "Mostly dissatisfied",
+            "mixed": "Praise and complaints in one review",
+            "positive": "Mostly satisfied"
+          }
+        },
+        "severity": {
+          "type": "score",
+          "instructions": "How severe is the reported problem?",
+          "criteria": [
+            "none",
+            "minor",
+            "moderate",
+            "severe"
+          ]
+        }
+      }
+    }
+  },
+  "response": {
+    "status": 200,
+    "elapsed_ms": 613,
+    "content_type": "application/json",
+    "headers": {
+      "date": "Mon, 19 Oct 2026 20:26:06 GMT",
+      "content-type": "application/json",
+      "access-control-allow-origin": "*",
+      "access-control-expose-headers": "X-Generation-Id,X-Provider-Name,request-id,cf-ray",
+      "x-generation-id": "gen-dec-1792441565-lu5lrlDvXYmPxint006H",
+      "x-provider-name": "Perplexity",
+      "permissions-policy": "payment=(self \"https://checkout.stripe.com\" \"https://connect-js.stripe.com\" \"https://js.stripe.com\" \"https://*.js.stripe.com\" \"https://hooks.stripe.com\")",
+      "referrer-policy": "no-referrer, strict-origin-when-cross-origin",
+      "x-content-type-options": "nosniff",
+      "cf-ray": "a4d28409ca96d6fd-IAD",
+      "server": "cloudflare",
+      "transfer-encoding": "chunked",
+      "connection": "keep-alive"
+    },
+    "json": {
+      "model": "perplexity/pplx-decider-v1.2-20261016",
+      "answers": {
+        "defect": {
+          "type": "noul",
+          "noul": 0.9973878705071658
+        },
+        "sentiment": {
+          "type": "choice",
+          "choice": "mixed",
+          "probabilities": {
+            "negative": 0.028709990774542702,
+            "mixed": 0.9094154607647101,
+            "positive": 0.06187454846074726
+          },
+          "confidence": 0.864123191147065
+        },
+        "severity": {
+          "type": "score",
+          "score": 1.8994243530774915,
+          "legend": {
+            "0": "none",
+            "1": "minor",
+            "2": "moderate",
+            "3": "severe"
+          },
+          "probabilities": {
+            "0": 0.007927621676690758,
+            "1": 0.17023647152068547,
+            "2": 0.7363198388510651,
+            "3": 0.08551606795155857
+          },
+          "confidence": 0.7283922171743744
+        }
+      },
+      "usage": {
+        "input_tokens": 198,
+        "output_tokens": 3,
+        "cost": 3.96e-06
+      },
+      "id": "gen-dec-1792441565-lu5lrlDvXYmPxint006H",
+      "provider": "Perplexity"
+    },
+    "text": null,
+    "body_bytes": 697
+  }
+}

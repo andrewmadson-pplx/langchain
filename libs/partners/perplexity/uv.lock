@@ -516,7 +516,7 @@ wheels = [
 
 [[package]]
 name = "langchain-core"
-version = "1.6.13"
+version = "1.7.0"
 source = { editable = "../../core" }
 dependencies = [
     { name = "httpx" },
@@ -583,6 +583,7 @@ name = "langchain-perplexity"
 version = "1.4.2"
 source = { editable = "." }
 dependencies = [
+    { name = "httpx" },
     { name = "langchain-core" },
     { name = "perplexityai" },
 ]
@@ -615,6 +616,7 @@ typing = [
 
 [package.metadata]
 requires-dist = [
+    { name = "httpx", specifier = ">=0.27.0" },
     { name = "langchain-core", editable = "../../core" },
     { name = "perplexityai", specifier = ">=0.34.1" },
 ]
