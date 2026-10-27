@@ -17,6 +17,16 @@ request-build time and only on the openrouter route; instructions are never
 synthesized from criteria. Set to `False` if OpenRouter starts accepting them.
 """
 
+OPENROUTER_TOP_LEVEL_IMAGES_ONLY = True
+"""Whether the openrouter route rejects image parts outside the top-level `state`.
+
+The live run on 2026-10-27 showed OpenRouter returns 400 for an `image_url` part
+nested inside a `state` object or array, or inside a question's `instructions`
+or `criteria`, while the native route reads image parts anywhere in `state`. The
+check is applied at request-build time and only on the openrouter route; image
+parts are never moved. Set to `False` if OpenRouter starts accepting them.
+"""
+
 DEFAULT_APP_URL = "https://docs.langchain.com"
 """Default `HTTP-Referer` sent on the openrouter route."""
 
@@ -119,6 +129,7 @@ __all__ = [
     "DEFAULT_APP_TITLE",
     "DEFAULT_APP_URL",
     "OPENROUTER_REQUIRES_INSTRUCTIONS",
+    "OPENROUTER_TOP_LEVEL_IMAGES_ONLY",
     "ROUTES",
     "RouteName",
     "RouteSpec",

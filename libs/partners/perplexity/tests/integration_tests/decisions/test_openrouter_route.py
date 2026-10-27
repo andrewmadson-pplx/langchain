@@ -71,15 +71,40 @@ def test_single_level_score(
         assert severity.probabilities == {0: 1.0}
 
 
-def test_image_in_human_message(
+def test_image_in_top_level_state(
     decisions: PerplexityDecisions,
     image_request: DecisionRequest,
+    image_data_url: str,
     record_property: Callable[[str, object], None],
 ) -> None:
-    response = decisions.invoke(image_request)
+    response = decisions.invoke(
+        {
+            "state": [
+                "Which color is the square?",
+                {"type": "image_url", "image_url": {"url": image_data_url}},
+            ],
+            "questions": image_request["questions"],
+        }
+    )
     color = response.choices["color"]
     assert color.choice in {"red", "blue", "green"}
     record_property("image_choice", color.choice)
+
+
+def test_nested_image_is_rejected_locally(image_request: DecisionRequest) -> None:
+    seen: list[httpx.Request] = []
+
+    def respond(request: httpx.Request) -> httpx.Response:
+        seen.append(request)
+        return httpx.Response(200, json={"answers": {}})
+
+    decisions = PerplexityDecisions(
+        route="openrouter",
+        client=httpx.Client(transport=httpx.MockTransport(respond)),
+    )
+    with pytest.raises(ValueError, match="top-level `state` items"):
+        decisions.invoke(image_request)
+    assert seen == []
 
 
 async def test_async_quickstart(

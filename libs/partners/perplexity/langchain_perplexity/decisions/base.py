@@ -62,10 +62,15 @@ class PerplexityDecisions(RunnableSerializable[DecisionRequest, DecisionResponse
 
     - `openrouter` (default): `https://openrouter.ai/api/alpha/decisions` with
       `OPENROUTER_API_KEY` and model `perplexity/pplx-decider-v1.2`. This route
-      requires `instructions` on every `Noul`.
+      requires `instructions` on every `Noul` and reads image parts only as
+      top-level `state` items.
     - `native`: `https://api.perplexity.ai/v1/decisions` with `PPLX_API_KEY` or
       `PERPLEXITY_API_KEY` and model `pplx-decider-v1.2`. This route also accepts a
-      `Noul` with only `criteria`.
+      `Noul` with only `criteria` and reads image parts anywhere in `state`,
+      including inside a `HumanMessage`.
+
+    Both rules are checked before the request is sent, so a request that one route
+    rejects raises `ValueError` locally instead of returning a 400.
 
     There is no fallback between routes, no key sniffing, and no retry inside the
     class. One `invoke` makes exactly one HTTP request; `batch` makes one request

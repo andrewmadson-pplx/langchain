@@ -361,6 +361,43 @@ def _validate_questions(
     return payload
 
 
+def _is_image_part(value: JsonValue) -> bool:
+    return (
+        isinstance(value, dict)
+        and value.get("type") == "image_url"
+        and "image_url" in value
+    )
+
+
+def _has_image_part(value: JsonValue) -> bool:
+    if _is_image_part(value):
+        return True
+    if isinstance(value, dict):
+        return any(_has_image_part(item) for item in value.values())
+    if isinstance(value, list):
+        return any(_has_image_part(item) for item in value)
+    return False
+
+
+def _validate_image_positions(
+    state: JsonValue, questions: Mapping[str, JsonValue], route: RouteSpec
+) -> None:
+    if not (_routes.OPENROUTER_TOP_LEVEL_IMAGES_ONLY and route.name == "openrouter"):
+        return
+    items = state if isinstance(state, list) else [state]
+    nested_in_state = any(
+        not _is_image_part(item) and _has_image_part(item) for item in items
+    )
+    if nested_in_state or any(_has_image_part(q) for q in questions.values()):
+        message = (
+            "The openrouter route reads image parts only as top-level `state` "
+            "items; an image part nested in `state` (for example inside a "
+            "`HumanMessage`) or inside a question's `instructions` or `criteria` "
+            "is read in place only on the native route."
+        )
+        raise ValueError(message)
+
+
 def build_payload(
     request: DecisionRequest,
     *,
@@ -380,13 +417,17 @@ def build_payload(
         A JSON object with `model`, `state`, `questions`, and any `extra` keys.
 
     Raises:
-        ValueError: If the questions violate a validation rule.
+        ValueError: If the questions violate a validation rule, or if the
+            openrouter route receives an image part outside the top-level `state`.
         TypeError: If the state cannot be represented as JSON.
     """
+    state = serialize_state(request["state"])
+    questions = _validate_questions(request["questions"], route)
+    _validate_image_positions(state, questions, route)
     payload: dict[str, JsonValue] = {
         "model": model,
-        "state": serialize_state(request["state"]),
-        "questions": _validate_questions(request["questions"], route),
+        "state": state,
+        "questions": questions,
     }
     if extra:
         validate_extra(extra, route)

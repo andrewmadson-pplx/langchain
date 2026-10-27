@@ -6,6 +6,7 @@ import pytest
 
 from langchain_perplexity.decisions._routes import (
     OPENROUTER_REQUIRES_INSTRUCTIONS,
+    OPENROUTER_TOP_LEVEL_IMAGES_ONLY,
     ROUTES,
     join_url,
 )
@@ -42,6 +43,7 @@ def test_native_defaults() -> None:
 def test_only_two_routes_and_default_flag() -> None:
     assert set(ROUTES) == {"openrouter", "native"}
     assert OPENROUTER_REQUIRES_INSTRUCTIONS is True
+    assert OPENROUTER_TOP_LEVEL_IMAGES_ONLY is True
 
 
 def test_join_url() -> None:

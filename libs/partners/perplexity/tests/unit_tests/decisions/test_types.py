@@ -3,8 +3,10 @@
 from __future__ import annotations
 
 import json
+from typing import Any
 
 import pytest
+from langchain_core.messages import HumanMessage
 from pydantic import ValidationError
 
 from langchain_perplexity.decisions import (
@@ -111,6 +113,42 @@ def test_criteria_only_noul_by_route(monkeypatch: pytest.MonkeyPatch) -> None:
 
     monkeypatch.setattr(_routes, "OPENROUTER_REQUIRES_INSTRUCTIONS", False)
     build_payload(request, model="m", route=ROUTES["openrouter"])
+
+
+def test_image_positions_by_route(monkeypatch: pytest.MonkeyPatch) -> None:
+    image: dict[str, Any] = {
+        "type": "image_url",
+        "image_url": {"url": "data:image/png;base64,aQ=="},
+    }
+    question = Choice(instructions="What color?", criteria={"red": None})
+    nested: DecisionRequest = {
+        "state": HumanMessage(content=[{"type": "text", "text": "Color?"}, image]),
+        "questions": {"color": question},
+    }
+    top_level: DecisionRequest = {
+        "state": ["Color?", image],
+        "questions": {"color": question},
+    }
+    in_question: DecisionRequest = {
+        "state": "Color?",
+        "questions": {
+            "color": Choice(instructions=["Compare", image], criteria={"red": None})
+        },
+    }
+
+    build_payload(nested, model="m", route=ROUTES["native"])
+    build_payload(top_level, model="m", route=ROUTES["openrouter"])
+    build_payload(
+        {"state": image, "questions": {"color": question}},
+        model="m",
+        route=ROUTES["openrouter"],
+    )
+    for request in (nested, in_question):
+        with pytest.raises(ValueError, match="top-level `state` items"):
+            build_payload(request, model="m", route=ROUTES["openrouter"])
+
+    monkeypatch.setattr(_routes, "OPENROUTER_TOP_LEVEL_IMAGES_ONLY", False)
+    build_payload(nested, model="m", route=ROUTES["openrouter"])
 
 
 def test_quickstart_payload_bytes() -> None:
