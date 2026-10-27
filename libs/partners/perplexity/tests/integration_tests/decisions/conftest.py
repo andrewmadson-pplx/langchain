@@ -196,7 +196,7 @@ def check_quickstart_structure() -> Callable[[DecisionResponse], None]:
 
 @pytest.fixture
 def recorded_response() -> Callable[[str, str], dict[str, object]]:
-    """Load the sanitized response recorded for a spike row on a route."""
+    """Load the sanitized live response recorded for a route."""
 
     def load(row: str, route: str) -> dict[str, object]:
         data = json.loads((FIXTURES / f"{row}.{route}.json").read_text())
