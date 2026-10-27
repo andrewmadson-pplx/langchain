@@ -7,6 +7,7 @@ import os
 from typing import Any, Literal
 
 import httpx
+from langchain_core._api import beta
 from langchain_core.runnables import RunnableConfig, RunnableSerializable
 from langchain_core.runnables.config import ensure_config
 from langsmith.run_helpers import get_current_run_tree
@@ -49,6 +50,7 @@ logger = logging.getLogger(__name__)
 _CUSTOM_PROVIDER = "custom"
 
 
+@beta()
 class PerplexityDecisions(RunnableSerializable[DecisionRequest, DecisionResponse]):
     """Ask typed questions about text, JSON, or messages and get probabilities back.
 
