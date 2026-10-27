@@ -104,6 +104,7 @@ markers = [
     "requires: mark tests as requiring a specific library",
     "compile: mark placeholder test used to compile integration tests without running them",
     "scheduled: mark tests to run in scheduled testing",
+    "live_required: mark live Decisions tests that must run when --require-live is set",
 ]
 asyncio_mode = "auto"
 filterwarnings = [

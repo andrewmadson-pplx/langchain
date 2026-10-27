@@ -2,6 +2,7 @@
 
 from langchain_perplexity._version import __version__
 from langchain_perplexity.chat_models import ChatPerplexity
+from langchain_perplexity.decisions import PerplexityDecisions
 from langchain_perplexity.embeddings import PerplexityEmbeddings
 from langchain_perplexity.output_parsers import (
     ReasoningJsonOutputParser,
@@ -30,4 +31,5 @@ __all__ = [
     "ReasoningJsonOutputParser",
     "ReasoningStructuredOutputParser",
     "strip_think_tags",
+    "PerplexityDecisions",
 ]
