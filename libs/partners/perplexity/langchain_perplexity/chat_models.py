@@ -650,7 +650,8 @@ class ChatPerplexity(BaseChatModel):
 
         Key init args - completion params:
             model:
-                Name of the model to use. e.g. "sonar"
+                Name of the model to use, e.g. "openai/gpt-5.6-sol" with
+                `use_responses_api=True`. See the Agent API section below.
             temperature:
                 Sampling temperature to use.
             max_tokens:
@@ -673,7 +674,7 @@ class ChatPerplexity(BaseChatModel):
         ```python
         from langchain_perplexity import ChatPerplexity
 
-        model = ChatPerplexity(model="sonar", temperature=0.7)
+        model = ChatPerplexity(model="openai/gpt-5.6-sol", use_responses_api=True)
         ```
 
         Invoke:
