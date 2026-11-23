@@ -77,8 +77,11 @@ class PerplexityEmbeddings(BaseModel, Embeddings):
     """Name of the Perplexity embedding model to use.
 
     See the API reference for available identifiers, including
-    `pplx-embed-v1-0.6b` and `pplx-embed-v1-4b`. Contextualized variants are
-    served through a separate endpoint and are not exposed by this class.
+    `pplx-embed-v2-context-0.6b`, `pplx-embed-v2-context-9b`,
+    `pplx-embed-v1-0.6b` and `pplx-embed-v1-4b`. v2 models receive
+    `input_type="document"` from `embed_documents` and `input_type="query"`
+    from `embed_query`. Contextualized v1 variants are served through a
+    separate endpoint and are not exposed by this class.
     """
 
     pplx_api_key: SecretStr | None = Field(
@@ -127,6 +130,25 @@ class PerplexityEmbeddings(BaseModel, Embeddings):
             self.async_client = AsyncPerplexity(**client_params)
         return self
 
+    @property
+    def _is_v1(self) -> bool:
+        return self.model.startswith("pplx-embed-v1")
+
+    def _input_type_params(self, input_type: str) -> dict[str, str]:
+        return {} if self._is_v1 else {"input_type": input_type}
+
+    def _embed(self, texts: list[str], input_type: str) -> list[list[float]]:
+        response = self.client.embeddings.create(
+            model=self.model, input=texts, **self._input_type_params(input_type)
+        )
+        return [_decode_int8_embedding(item.embedding) for item in response.data]
+
+    async def _aembed(self, texts: list[str], input_type: str) -> list[list[float]]:
+        response = await self.async_client.embeddings.create(
+            model=self.model, input=texts, **self._input_type_params(input_type)
+        )
+        return [_decode_int8_embedding(item.embedding) for item in response.data]
+
     def embed_documents(self, texts: list[str]) -> list[list[float]]:
         """Embed a list of documents using the Perplexity embeddings API.
 
@@ -139,8 +161,7 @@ class PerplexityEmbeddings(BaseModel, Embeddings):
         """
         if not texts:
             return []
-        response = self.client.embeddings.create(model=self.model, input=texts)
-        return [_decode_int8_embedding(item.embedding) for item in response.data]
+        return self._embed(texts, "document")
 
     def embed_query(self, text: str) -> list[float]:
         """Embed a single query string using the Perplexity embeddings API.
@@ -151,7 +172,9 @@ class PerplexityEmbeddings(BaseModel, Embeddings):
         Returns:
             The embedding vector for the input text.
         """
-        return self.embed_documents([text])[0]
+        if self._is_v1:
+            return self.embed_documents([text])[0]
+        return self._embed([text], "query")[0]
 
     async def aembed_documents(self, texts: list[str]) -> list[list[float]]:
         """Asynchronously embed a list of documents.
@@ -165,10 +188,7 @@ class PerplexityEmbeddings(BaseModel, Embeddings):
         """
         if not texts:
             return []
-        response = await self.async_client.embeddings.create(
-            model=self.model, input=texts
-        )
-        return [_decode_int8_embedding(item.embedding) for item in response.data]
+        return await self._aembed(texts, "document")
 
     async def aembed_query(self, text: str) -> list[float]:
         """Asynchronously embed a single query string.
@@ -179,5 +199,8 @@ class PerplexityEmbeddings(BaseModel, Embeddings):
         Returns:
             The embedding vector for the input text.
         """
-        result = await self.aembed_documents([text])
+        if self._is_v1:
+            result = await self.aembed_documents([text])
+        else:
+            result = await self._aembed([text], "query")
         return result[0]
