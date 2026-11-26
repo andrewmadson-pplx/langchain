@@ -13,6 +13,7 @@ EXPECTED_ALL = [
     "ReasoningJsonOutputParser",
     "ReasoningStructuredOutputParser",
     "strip_think_tags",
+    "PerplexityDecisions",
 ]
 
 
