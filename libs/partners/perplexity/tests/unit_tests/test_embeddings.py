@@ -2,7 +2,7 @@
 
 import base64
 import struct
-from unittest.mock import AsyncMock, MagicMock
+from unittest.mock import AsyncMock, MagicMock, call, patch
 
 import pytest
 from pydantic import SecretStr
@@ -154,7 +154,43 @@ def test_embed_documents_uses_custom_model() -> None:
     embeddings.embed_documents(["x"])
 
     mock_client.embeddings.create.assert_called_once_with(
-        model="custom-model", input=["x"]
+        model="custom-model", input=["x"], input_type="document"
+    )
+
+
+def test_v1_embed_query_delegates_to_embed_documents() -> None:
+    embeddings = PerplexityEmbeddings(pplx_api_key="test")
+    with patch.object(
+        PerplexityEmbeddings, "embed_documents", return_value=[[1.0]]
+    ) as embed_documents:
+        assert embeddings.embed_query("q") == [1.0]
+    embed_documents.assert_called_once_with(["q"])
+
+
+def test_v2_embed_documents_sends_document_input_type() -> None:
+    mock_client = MagicMock()
+    mock_client.embeddings.create.return_value = _make_response([[1], [2]])
+    embeddings = PerplexityEmbeddings(
+        pplx_api_key="test", model="pplx-embed-v2-context-0.6b", client=mock_client
+    )
+
+    embeddings.embed_documents(["a", "b"])
+
+    mock_client.embeddings.create.assert_called_once_with(
+        model="pplx-embed-v2-context-0.6b", input=["a", "b"], input_type="document"
+    )
+
+
+def test_v2_embed_query_sends_query_input_type() -> None:
+    mock_client = MagicMock()
+    mock_client.embeddings.create.return_value = _make_response([[3]])
+    embeddings = PerplexityEmbeddings(
+        pplx_api_key="test", model="pplx-embed-v2-context-0.6b", client=mock_client
+    )
+
+    assert embeddings.embed_query("q") == [3.0]
+    mock_client.embeddings.create.assert_called_once_with(
+        model="pplx-embed-v2-context-0.6b", input=["q"], input_type="query"
     )
 
 
@@ -201,3 +237,20 @@ async def test_aembed_query() -> None:
     mock_async_client.embeddings.create.assert_awaited_once_with(
         model="pplx-embed-v1-4b", input=["hi"]
     )
+
+
+async def test_v2_async_sends_input_type() -> None:
+    mock_async_client = MagicMock()
+    mock_async_client.embeddings.create = AsyncMock(return_value=_make_response([[4]]))
+    embeddings = PerplexityEmbeddings(
+        pplx_api_key="test",
+        model="pplx-embed-v2-context-9b",
+        async_client=mock_async_client,
+    )
+
+    assert await embeddings.aembed_documents(["d"]) == [[4.0]]
+    assert await embeddings.aembed_query("q") == [4.0]
+    assert mock_async_client.embeddings.create.await_args_list == [
+        call(model="pplx-embed-v2-context-9b", input=["d"], input_type="document"),
+        call(model="pplx-embed-v2-context-9b", input=["q"], input_type="query"),
+    ]

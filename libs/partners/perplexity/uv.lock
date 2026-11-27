@@ -453,7 +453,7 @@ wheels = [
 
 [[package]]
 name = "langchain-core"
-version = "1.8.0"
+version = "1.8.5"
 source = { editable = "../../core" }
 dependencies = [
     { name = "certifi" },
@@ -474,7 +474,7 @@ requires-dist = [
     { name = "certifi", specifier = ">=2026.10.19" },
     { name = "httpx", specifier = ">=0.23.0" },
     { name = "jsonpatch", specifier = ">=1.33.0" },
-    { name = "langchain-protocol", specifier = ">=0.0.20" },
+    { name = "langchain-protocol", specifier = ">=0.0.22" },
     { name = "langsmith", specifier = ">=0.14.9,<1.0.0" },
     { name = "packaging", specifier = ">=23.2.0" },
     { name = "pydantic", specifier = ">=2.7.4,<3.0.0" },
@@ -558,7 +558,7 @@ test-integration = ">=3.11"
 [package.metadata]
 requires-dist = [
     { name = "langchain-core", editable = "../../core" },
-    { name = "perplexityai", specifier = ">=0.34.1" },
+    { name = "perplexityai", specifier = ">=0.48.1" },
 ]
 
 [package.metadata.requires-dev]
@@ -588,14 +588,14 @@ typing = [
 
 [[package]]
 name = "langchain-protocol"
-version = "0.0.20"
+version = "0.0.22"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "typing-extensions" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/cb/8b/d908d082c3cf5368ddd1816ed114de79c873f979ba7f98b95fab0e841643/langchain_protocol-0.0.20.tar.gz", hash = "sha256:0f5bd002474265648e91161771a9e0438fe9480bd55a416e51af0f60070637ec", size = 6280, upload-time = "2026-10-20T11:13:50.84Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/a2/5c/94ffa0c0b9445ac284bf7c0aebf2fa3a32bdf27c20aaf2f061746375b670/langchain_protocol-0.0.22.tar.gz", hash = "sha256:61267bc9f478c9df35ccdafd9fdf556b2698435232d59def54b3809bb02585bb", size = 6508, upload-time = "2026-11-19T15:47:56.068Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/02/4b/f1c99a0b27c5ff8b4b131c0d6e62012c17cc424089efe213767db927afd2/langchain_protocol-0.0.20-py3-none-any.whl", hash = "sha256:3c935e5e46b0f6f9cb52f45ba7cfa53d1b9fa80c82c4a277d47f03e07f7385b1", size = 7347, upload-time = "2026-10-20T11:13:49.566Z" },
+    { url = "https://files.pythonhosted.org/packages/71/0a/e96b6ca3b5a7d91af31fd82aee42e65beb6bbe884587e27df5460feee486/langchain_protocol-0.0.22-py3-none-any.whl", hash = "sha256:d264998a507b735320c15a7b366051cbf41e21f771bea1b03a911f2c58af02e7", size = 7579, upload-time = "2026-11-19T15:47:55.109Z" },
 ]
 
 [[package]]
@@ -989,7 +989,7 @@ wheels = [
 
 [[package]]
 name = "perplexityai"
-version = "0.34.1"
+version = "0.50.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "anyio" },
@@ -999,9 +999,8 @@ dependencies = [
     { name = "sniffio" },
     { name = "typing-extensions" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/4c/9e/253b60c5a51913a0a1e4eddccb02078e4cdb496cab994ad4bdd1e83a8f65/perplexityai-0.34.1.tar.gz", hash = "sha256:8e4b47d52c1d2c0d259eead6941dc60896045070bf0794bcbab8a96e428e06ef", size = 138767, upload-time = "2026-05-27T02:55:02.096Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/05/47/246e7e7463df53a9e37cc7427296c8ee5c18183c5217fb3df3a088dfb652/perplexityai-0.34.1-py3-none-any.whl", hash = "sha256:6dcf94e73ec22bc8c98724e6999aa8a371eb441cc7ddd7e44c13e326e06d37b8", size = 131948, upload-time = "2026-05-27T02:55:01.024Z" },
+    { url = "https://files.pythonhosted.org/packages/9b/11/b763e26e26d3974da1ddc657305e9a6594157281e039226c842ac080bc85/perplexityai-0.50.0-py3-none-any.whl", hash = "sha256:79429960ac65633c2ff3a2e8a411ce1abeb05211e19a172c54b203e4505abf71", size = 167753, upload-time = "2026-11-25T14:53:56.521Z" },
 ]
 
 [[package]]

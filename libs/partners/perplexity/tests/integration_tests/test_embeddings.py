@@ -54,3 +54,11 @@ class TestPerplexityEmbeddings:
         vector = await embeddings.aembed_query("hello")
         assert isinstance(vector, list)
         assert len(vector) > 0
+
+    def test_v2_model(self) -> None:
+        """v2 models need `input_type` for queries and documents."""
+        embeddings = PerplexityEmbeddings(model="pplx-embed-v2-context-0.6b")
+        query_vec = embeddings.embed_query("hello")
+        doc_vecs = embeddings.embed_documents(["hello", "world"])
+        assert len(doc_vecs) == 2
+        assert len(query_vec) == len(doc_vecs[0]) > 0
